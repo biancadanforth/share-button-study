@@ -1,33 +1,70 @@
 /* eslint-env node */
 // The geckodriver package downloads and installs geckodriver for us.
 // We use it by requiring it.
+
+// Selenium can install the add-on for you, so you don't have to open about:debugging, etc.
+// Selenium lets you set the treatment
+// The point of the preference override is during testing you can set the preference explicitly
+// Have a script that sets the pref for you, instead of going to about:config, updating the pref etc.
+// Selenium implements a protocol called webdriver; this is a protocol that tells the browser to execute a command
+// it works by sending HTTP requests to some server that knows how to execute the requests
+// geckodriver translates webdriver commands into FF specific commands
+// Give a command to selenium webdriver, send it to geckodriver which translates into something FF understands
 require("geckodriver");
+// cmd API for Selenium webdriver
 const cmd = require("selenium-webdriver/lib/command");
+// Firefox specific API for Selenium webdriver
 const firefox = require("selenium-webdriver/firefox");
+// File system; you can take screenshots in selenium and need to store it somewhere
+// The tests were failing on the CI platform we were using; since that's run in a Docker image on a server somewhere
+// it's hard to see what's going on, so Marc thought of taking screenshots
+// animations and popups weren't working just having a screenshot wasn't super useful
+// if changing the look of a site, then screenshots make sense
+// In CI environment where there is no display this could be useful.
+// Not actually used here.
 const Fs = require("fs-extra");
+// Does something with setting up the binary path; look up
+// Some of this stuff is coming from an example web extension by standard8
+// https://github.com/Standard8/example-webextension
 const FxRunnerUtils = require("fx-runner/lib/utils");
+// For screenshots, you have to make a local to an absolute path or something like that, for file handling
 const path = require("path");
 const webdriver = require("selenium-webdriver");
 
+// Selenium webdriver things, methods for doing specific kinds of automation
+// By is a locator so you can say: locate elements by ID for example
+// The Selenium webdriver has documentation: https://seleniumhq.github.io/docs/
 const By = webdriver.By;
 const Context = firefox.Context;
 const until = webdriver.until;
 
+// These are certain things you can set in FF that we want to make sure are true
+// These are applied to the user profile
+// see promiseSetUpDriver function
+// Selenium is not just for FF. It's general for all browsers.
 // Note: Geckodriver already has quite a good set of default preferences
 // for disabling various items.
 // https://github.com/mozilla/geckodriver/blob/master/src/marionette.rs
 const FIREFOX_PREFERENCES = {
+  // see standard8 example web extension repo.
+  // This will soon be a default.
+  // Important to test with it working.
   // Ensure e10s is turned on.
   "browser.tabs.remote.autostart": true,
   "browser.tabs.remote.autostart.1": true,
   "browser.tabs.remote.autostart.2": true,
   // These are good to have set up if you're debugging tests with the browser
   // toolbox.
+  // These are the same toggles for inspecting browser chrome
+  // for Manual Testing not Automated testing via Selenium Web Driver
   "devtools.chrome.enabled": true,
   "devtools.debugger.remote-enabled": true,
 };
 
 // useful if we need to test on a specific version of Firefox
+// say you want to use the beta or nightly binary
+// apply path and filesystem things to it so Selenium can undesrtand it.
+// see promiseSetupDriver method
 async function promiseActualBinary(binary) {
   try {
     const normalizedBinary = await FxRunnerUtils.normalizeBinary(binary);
@@ -41,6 +78,7 @@ async function promiseActualBinary(binary) {
   }
 }
 
+// Selenium is also responsible for opening FF application
 module.exports.promiseSetupDriver = async() => {
   const profile = new firefox.Profile();
 

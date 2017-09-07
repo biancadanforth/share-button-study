@@ -1,3 +1,14 @@
+// IndexedDB storage and local memory storage
+
+// When writing to indexedDB its async
+// To make sure all pings are there, before quit FF, store everything in local variable/memory, it will
+// remain there in lifetime of FF, when quit FF it will be gone
+// When you say write to indexedDB and right after that say get everything, not everything might be there
+// you can compare what you have in local memory and what you have in indexedDB
+// if there's a difference you can use what's in memory
+// async/await could work but if you're awaiting in another part of code outside of the shutdown function
+// shutdown doesn't know that you're waiting for it
+
 const { utils: Cu } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "IndexedDB", "resource://gre/modules/IndexedDB.jsm");
