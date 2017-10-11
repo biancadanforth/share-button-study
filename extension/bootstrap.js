@@ -2,36 +2,45 @@ const { interfaces: Ci, utils: Cu } = Components;
 // Firefox components
 // files included within the browser itself; wherever it's located in the FF codebase
 // Services: translate resource URLs into another path (for share button CSS/panel button CSS)
-// XPCOMUtils for defineLazyModuleGetter, as soon as call StudyUtils/Preferences for example, it will load it but not before, but for example for Services, I use it on Line 29 no point to lazily import it, only import the first time you use it, important for start-up time
+// XPCOMUtils for defineLazyModuleGetter, as soon as call StudyUtils/Preferences for 
+// example, it will load it but not before, but for example for Services, 
+// I use it on Line 29 no point to lazily import it, only import the first time you use it,
+// important for start-up time
 // CustomizableUI: Has to do with adding Share Button to the toolbar.
-// Normandy system addon (https://github.com/mozilla/normandy/tree/master/recipe-client-addon) is also a bootstrapped add-on, has a lot of this as well, mostly found out these by talking to others and looking at other bootstrapped add-ons
+// Normandy system addon (https://github.com/mozilla/normandy/tree/master/recipe-client-addon)
+// is also a bootstrapped add-on, has a lot of this as well, mostly found out these by
+// talking to others and looking at other bootstrapped add-ons
 // Bootstrapped extensions page is useful, but mostly looking at examples.
-// SearchFox or DXR: Lets you search through all the Mozilla Central code. Useful for looking as Services.jsm etc. to see how other parts of FF use these modules.
+// SearchFox or DXR: Lets you search through all the Mozilla Central code. Useful for
+// looking as Services.jsm etc. to see how other parts of FF use these modules.
 // SearchFox: http://searchfox.org/
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
   "resource://gre/modules/Preferences.jsm");
-// Not part of FF.
+// StudyUtils is not part of FF internals.
 // Has part that sends pings to telemetry.
 XPCOMUtils.defineLazyModuleGetter(this, "studyUtils",
   "resource://share-button-study/StudyUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "config",
   "resource://share-button-study/Config.jsm");
-// Marc wrote PingStorage module; creates ping data he wants; saves ping to IndexedDB during study and a summary at end of study
+// Marc wrote PingStorage module; creates ping data he wants; saves ping to IndexedDB
+// during study and a summary at end of study
 // StudyUtils is called separately to send telemetry data
 // chrome.manifest maps share-button-study directory
-// Alternative method:
+// Alternative method to this per Gregg:
 // - So don't have to change name of resource to name of study
-// - How to define the SCRIPT_URI_SPEC (tricky); a global that gets filled in bootstrap.js scope
+// - How to define the SCRIPT_URI_SPEC (tricky); a global that gets filled in
+//   bootstrap.js scope
 // - const STUDYUTILSPATH = `${__SCRIPT_URI_SPEC__}/../${studyConfig.studyUtilsPath}`;
 // - const { studyUtils } = Cu.import(STUDYUTILSPATH, {});
 XPCOMUtils.defineLazyModuleGetter(this, "PingStorage",
   "resource://share-button-study/PingStorage.jsm");
 
 // Mapped to numbers; in all install, uninstall functions, REASON is passed as numbers.
-// methods are called as part of the lifecycle of the extension, data types are predefined. This is on the bootstrap extension MDN page too.
+// methods like Startup/Shutdown are called as part of the lifecycle of the extension,
+// data types are predefined. This is on the bootstrap extension MDN page too.
 const REASONS = {
   APP_STARTUP:      1, // The application is starting up.
   APP_SHUTDOWN:     2, // The application is shutting down.
@@ -44,8 +53,12 @@ const REASONS = {
   ADDON_DOWNGRADE:  8, // The add-on is being downgraded.
 };
 
-// Firefox has a preferences system, you can see if you go to about:config. They're called preferences, but you can use them to store values as well. The preferences are stored under string names and you can set the preference and check the state of the preference. 
-// If you need something to persist across multiple sessions, then can't store in memory of extension; can use localStorage or IndexedDB for larger amounts of data
+// Firefox has a preferences system, you can see if you go to about:config.
+// They're called preferences, but you can use them to store values as well.
+// The preferences are stored under string names and you can set the preference and
+// check the state of the preference. 
+// If you need something to persist across multiple sessions, then can't store
+// in memory of extension; can use localStorage or IndexedDB for larger amounts of data
 // defining custom prefs for share button; period notation doesn't actually do anything; just info hierarchy
 // avoid conflicting name; otherwise will change preference
 const COUNTER_PREF = "extensions.sharebuttonstudy.counter";
